@@ -17,6 +17,7 @@ package org.springframework.samples.petclinic.store;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Entity
 @Table(name = "store_details")
@@ -30,7 +31,7 @@ public class StoreDetails {
 
     private String owner;
 
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @MapsId
     @JoinColumn(name = "id")
     private Store store;
@@ -69,5 +70,22 @@ public class StoreDetails {
     public StoreDetails setStore(Store store) {
         this.store = store;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (!(o instanceof StoreDetails))
+            return false;
+
+        StoreDetails other = (StoreDetails) o;
+
+        return id != null && id.equals(other.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

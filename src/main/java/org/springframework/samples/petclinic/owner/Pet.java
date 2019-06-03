@@ -53,15 +53,15 @@ public class Pet extends NamedEntity {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "type_id")
     private PetType type;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private Owner owner;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "petId", fetch = FetchType.EAGER)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "petId", fetch = FetchType.LAZY)
     private Set<Visit> visits = new LinkedHashSet<>();
 
     public void setBirthDate(LocalDate birthDate) {
@@ -111,4 +111,8 @@ public class Pet extends NamedEntity {
         visit.setPetId(this.getId());
     }
 
+    public void removeVisit(Visit visit) {
+        getVisitsInternal().remove(visit);
+        visit.setPetId(null);
+    }
 }
