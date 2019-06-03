@@ -23,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.samples.petclinic.store.Store;
 import org.springframework.samples.petclinic.store.StoreDetails;
 import org.springframework.samples.petclinic.store.StoreService;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@ActiveProfiles("mysql")
 public class PetclinicIntegrationTests {
 
     @Autowired
@@ -80,7 +82,7 @@ public class PetclinicIntegrationTests {
     public void testSaveAll() {
         hypersistenceOptimizer.getEvents().clear();
 
-        storeService.saveAll(newStoreDetailsList(500));
+        storeService.saveAll(newStoreDetailsList(250));
 
         assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
     }
@@ -89,7 +91,7 @@ public class PetclinicIntegrationTests {
     public void testInsertAll() {
         hypersistenceOptimizer.getEvents().clear();
 
-        storeService.insertAll(newStoreDetailsList(1000));
+        storeService.insertAll(newStoreDetailsList(250));
 
         assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
     }

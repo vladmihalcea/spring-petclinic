@@ -70,4 +70,16 @@ public class StoreDetails {
         this.store = store;
         return this;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof StoreDetails)) return false;
+        return id != null && id.equals(((StoreDetails) o).getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }
