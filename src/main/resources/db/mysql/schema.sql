@@ -1,11 +1,3 @@
-CREATE DATABASE IF NOT EXISTS petclinic;
-
-ALTER DATABASE petclinic
-  DEFAULT CHARACTER SET utf8
-  DEFAULT COLLATE utf8_general_ci;
-
-GRANT ALL PRIVILEGES ON petclinic.* TO pc@localhost IDENTIFIED BY 'pc';
-
 USE petclinic;
 
 CREATE TABLE IF NOT EXISTS vets (
@@ -63,3 +55,15 @@ CREATE TABLE IF NOT EXISTS visits (
   description VARCHAR(255),
   FOREIGN KEY (pet_id) REFERENCES pets(id)
 ) engine=InnoDB;
+
+CREATE TABLE IF NOT EXISTS stores (
+  id INT(4) UNSIGNED NOT NULL PRIMARY KEY,
+  name VARCHAR(30)
+);
+
+CREATE TABLE IF NOT EXISTS store_details (
+  id INT(4) UNSIGNED NOT NULL PRIMARY KEY,
+  created_on TIMESTAMP,
+  owner VARCHAR(30),
+  FOREIGN KEY (id) REFERENCES stores(id)
+);
