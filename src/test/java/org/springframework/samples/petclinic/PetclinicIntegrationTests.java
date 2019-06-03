@@ -80,7 +80,7 @@ public class PetclinicIntegrationTests {
     public void testSaveAll() {
         hypersistenceOptimizer.getEvents().clear();
 
-        storeService.saveAll(newStoreDetailsList(1000));
+        storeService.saveAll(newStoreDetailsList(500));
 
         assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
     }
@@ -89,7 +89,7 @@ public class PetclinicIntegrationTests {
     public void testInsertAll() {
         hypersistenceOptimizer.getEvents().clear();
 
-        storeService.insertAll(newStoreDetailsList(2000));
+        storeService.insertAll(newStoreDetailsList(1000));
 
         assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
     }
