@@ -16,24 +16,100 @@
 
 package org.springframework.samples.petclinic;
 
+import io.hypersistence.optimizer.HypersistenceOptimizer;
+import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.samples.petclinic.store.Store;
+import org.springframework.samples.petclinic.store.StoreDetails;
+import org.springframework.samples.petclinic.store.StoreService;
 import org.springframework.samples.petclinic.vet.VetRepository;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class PetclinicIntegrationTests {
 
     @Autowired
-    private VetRepository vets;
+    private VetRepository vetRepository;
+
+    @Autowired
+    private StoreService storeService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
+
+    @Autowired
+    private HypersistenceOptimizer hypersistenceOptimizer;
+
+    @Before
+    public void init() {
+        transactionTemplate.execute(status -> {
+            entityManager.createQuery("delete from StoreDetails").executeUpdate();
+            entityManager.createQuery("delete from Store").executeUpdate();
+
+            return null;
+        });
+    }
 
     @Test
-    public void testFindAll() throws Exception {
-        vets.findAll();
-        vets.findAll(); // served from cache
+    public void testFindAll() {
+        assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
+
+        vetRepository.findAll();
+        vetRepository.findAll(); // served from cache
+
+        assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
+    }
+
+    @Test
+    public void testSaveAll() {
+        hypersistenceOptimizer.getEvents().clear();
+
+        storeService.saveAll(newStoreDetailsList(1000));
+
+        assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
+    }
+
+    @Test
+    public void testInsertAll() {
+        hypersistenceOptimizer.getEvents().clear();
+
+        storeService.insertAll(newStoreDetailsList(2000));
+
+        assertTrue(hypersistenceOptimizer.getEvents().isEmpty());
+    }
+
+    private List<StoreDetails> newStoreDetailsList(int storeCount) {
+        List<StoreDetails> storeDetailsList = new ArrayList<>();
+
+        for (int i = 1; i <= storeCount; i++) {
+            storeDetailsList.add(
+                new StoreDetails()
+                    .setId(i)
+                    .setOwner("Vlad Mihalcea")
+                    .setStore(
+                        new Store()
+                            .setId(i)
+                            .setName(String.format("Store no %d", i))
+                    )
+            );
+        }
+
+        return storeDetailsList;
     }
 }
