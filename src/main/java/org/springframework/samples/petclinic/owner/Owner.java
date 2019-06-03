@@ -59,7 +59,7 @@ public class Owner extends Person {
     private String telephone;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "owner")
-    private Set<Pet> pets;
+    private Set<Pet> pets = new HashSet<>();
 
     public String getAddress() {
         return this.address;
@@ -108,6 +108,11 @@ public class Owner extends Person {
             getPetsInternal().add(pet);
         }
         pet.setOwner(this);
+    }
+
+    public void removePet(Pet pet) {
+        getPetsInternal().remove(pet);
+        pet.setOwner(null);
     }
 
     /**

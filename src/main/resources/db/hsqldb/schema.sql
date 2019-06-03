@@ -8,6 +8,10 @@ DROP TABLE owners IF EXISTS;
 DROP TABLE store_details IF EXISTS;
 DROP TABLE stores IF EXISTS;
 
+DROP SEQUENCE IF EXISTS hibernate_sequence;
+
+CREATE SEQUENCE hibernate_sequence START WITH 100 INCREMENT BY 1;
+
 CREATE TABLE vets (
   id         INTEGER IDENTITY PRIMARY KEY,
   first_name VARCHAR(30),
