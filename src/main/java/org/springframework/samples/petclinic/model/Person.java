@@ -15,9 +15,15 @@
  */
 package org.springframework.samples.petclinic.model;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.vladmihalcea.hibernate.type.json.JsonType;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.TypeDef;
+
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotEmpty;
+import java.util.Map;
 
 /**
  * Simple JavaBean domain object representing an person.
@@ -25,6 +31,7 @@ import javax.validation.constraints.NotEmpty;
  * @author Ken Krebs
  */
 @MappedSuperclass
+@TypeDef(name = "json-type", typeClass = JsonType.class)
 public class Person extends BaseEntity {
 
     @Column(name = "first_name")

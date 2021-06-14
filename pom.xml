@@ -29,6 +29,8 @@
 
     <jacoco.version>0.8.2</jacoco.version>
 
+    <hibernate.version>5.5.0.Final</hibernate.version>
+    <hibernate-types.version>2.11.2-SNAPSHOT</hibernate-types.version>
   </properties>
 
   <dependencies>
@@ -108,6 +110,19 @@
       <artifactId>spring-boot-devtools</artifactId>
       <optional>true</optional>
     </dependency>
+
+      <dependency>
+          <groupId>org.hibernate</groupId>
+          <artifactId>hibernate-core</artifactId>
+          <version>${hibernate.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.vladmihalcea</groupId>
+          <artifactId>hibernate-types-55</artifactId>
+          <version>${hibernate-types.version}</version>
+      </dependency>
+
   </dependencies>
 
   <build>
