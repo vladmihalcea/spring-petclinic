@@ -3,9 +3,65 @@
 ## Understanding the Spring Petclinic application with a few diagrams
 <a href="https://speakerdeck.com/michaelisvy/spring-petclinic-sample-application">See the presentation here</a>
 
+## Lightrun workshop
+
+### Enabling the Hibernate Statistics
+
+Enabling the Hibernate `Statistics` will allow us to intercept all various Hibernate callbacks:
+
+````
+spring.jpa.properties.hibernate.generate_statistics=true
+````
+
+### The Query Plan Cache
+
+By setting the query place cache to the value of `1`:
+
+````
+spring.jpa.properties.hibernate.query.plan_cache_max_size=1
+````
+
+We can add a snapshot in the `StatisticsImpl.queryCompiled` method
+to investigate when a JPQL or Criteria API gets compiled.
+
+### Eager fetching Connections because of the auto-commit check
+
+Add a log into the `AbstractLogicalConnectionImplementor.begin` in the `doConnectionsFromProviderHaveAutoCommitDisabled` if branch.
+
+So, we need to add these settings to acquire connections lazily:
+
+````
+spring.jpa.properties.hibernate.connection.provider_disables_autocommit=true
+spring.datasource.hikari.auto-commit=false
+````
+
+### Detect associations that are fetched using secondary queries
+
+Add a snapshot into `DefaultLoadEventListener.loadFromDatasource` method with a condition for `event.isAssociationFetch()`.
+
+#### Log all queries executed by Hibernate
+
+Add a log into `Loader.executeQueryStatement` method to capture all SQL queries being executed by Hibernate.
+
+#### Add timer to see how long queries executed by Hibernate take
+
+Add a timer to the `Loader.doQuery` method (line 943) to time all queries being executed by Hibernate.
+
+### Open Session in View
+
+Make some associations lazy. For instance, in the `Owner` class, make this association lazy:
+
+````
+@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+@JoinColumn(name = "owner_id")
+@OrderBy("name")
+private List<Pet> pets = new ArrayList<>();
+````
+
+Now, add a snapshot into `DefaultInitializeCollectionEventListener` in the `onInitializeCollection` method.
+
 ## Running petclinic locally
 Petclinic is a [Spring Boot](https://spring.io/guides/gs/spring-boot) application built using [Maven](https://spring.io/guides/gs/maven/). You can build a jar file and run it from the command line (it should work just as well with Java 11 or newer):
-
 
 ```
 git clone https://github.com/spring-projects/spring-petclinic.git
