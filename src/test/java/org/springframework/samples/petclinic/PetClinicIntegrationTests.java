@@ -19,8 +19,11 @@ package org.springframework.samples.petclinic;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
@@ -29,10 +32,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.samples.petclinic.vet.VetRepository;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = "logging.level.sql=DEBUG")
+import java.util.concurrent.TimeUnit;
+
+
+@SpringBootTest(
+	webEnvironment = WebEnvironment.RANDOM_PORT,
+	properties = {
+		"logging.level.sql=DEBUG",
+		"spring.docker.compose.enabled=false"
+	}
+)
+@ActiveProfiles("mysql")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class PetClinicIntegrationTests {
+
+	public static final Logger LOGGER = LoggerFactory.getLogger(MySqlIntegrationTests.class);
 
 	@LocalServerPort
 	int port;
@@ -58,8 +75,13 @@ public class PetClinicIntegrationTests {
 
 	@Test
 	void testOwnerList() {
+		long startNanos = System.nanoTime();
+
 		RestTemplate template = builder.rootUri("http://localhost:" + port).build();
 		ResponseEntity<String> result = template.exchange(RequestEntity.get("/owners?lastName=").build(), String.class);
+
+		LOGGER.info("Request took {} ms", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
 
