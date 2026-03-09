@@ -24,7 +24,9 @@
         <td th:text="${owner.address}" />
         <td th:text="${owner.city}" />
         <td th:text="${owner.telephone}" />
-        <td><span th:text="${#strings.listJoin(owner.pets, ', ')}" /></td>
+        <td>
+          <span th:each="pet, stat : ${owner.pets}" th:text="${pet.name + (stat.last ? '' : ', ')}"></span>
+        </td>
       </tr>
     </tbody>
   </table>

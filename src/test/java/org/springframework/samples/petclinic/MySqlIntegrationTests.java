@@ -97,7 +97,7 @@ class MySqlIntegrationTests {
 				vet.setLastName("Smith" + (vetCount + i));
 
 				entityManager.persist(vet);
-				if(i > 0 && i % batchSize == 0) {
+				if (i > 0 && i % batchSize == 0) {
 					entityManager.flush();
 					entityManager.clear();
 				}
@@ -124,7 +124,7 @@ class MySqlIntegrationTests {
 					pet.setType(types.get(i % types.size()));
 
 					entityManager.persist(pet);
-					if(i > 0 && i % batchSize == 0) {
+					if (i > 0 && i % batchSize == 0) {
 						entityManager.flush();
 						entityManager.clear();
 					}
@@ -136,7 +136,7 @@ class MySqlIntegrationTests {
 	}
 
 	private void insertVisits() {
-		try(Connection connection = dataSource.getConnection()) {
+		try (Connection connection = dataSource.getConnection()) {
 			connection.setAutoCommit(false);
 			for (int j = 1; j <= 3; j++) {
 				LOGGER.info("Inserting Visits for Pet: {}", j);
@@ -146,7 +146,7 @@ class MySqlIntegrationTests {
 					int batchSize = 1000;
 					int visitCount = Math.toIntExact(visits.countByPetId(petId));
 
-					try(PreparedStatement ps = connection.prepareStatement("""
+					try (PreparedStatement ps = connection.prepareStatement("""
 							INSERT INTO `petclinic`.`visits` (
 								`pet_id`,
 								`visit_date`,
@@ -157,8 +157,7 @@ class MySqlIntegrationTests {
 								?,
 								?
 							)
-							""")
-					) {
+							""")) {
 						for (int i = 0; i < batchSize; i++) {
 							int visitIndex = visitCount + i;
 							ps.setLong(1, petId);
@@ -172,8 +171,10 @@ class MySqlIntegrationTests {
 					connection.commit();
 				}
 			}
-		} catch (SQLException e) {
+		}
+		catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
+
 }

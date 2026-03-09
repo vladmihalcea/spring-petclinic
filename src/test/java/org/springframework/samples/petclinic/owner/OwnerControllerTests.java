@@ -24,6 +24,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.samples.petclinic.owner.view.OwnerDetailsView;
+import org.springframework.samples.petclinic.owner.view.OwnerPetView;
+import org.springframework.samples.petclinic.owner.view.OwnerVisitView;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +47,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -67,6 +71,32 @@ class OwnerControllerTests {
 
 	@MockitoBean
 	private OwnerRepository owners;
+
+	@MockitoBean
+	private OwnerViewRepository ownerViews;
+
+	private OwnerDetailsView georgeView() {
+		OwnerVisitView visit = mock(OwnerVisitView.class);
+		when(visit.getDate()).thenReturn(LocalDate.now());
+		when(visit.getDescription()).thenReturn("Annual checkup");
+
+		OwnerPetView pet = mock(OwnerPetView.class);
+		when(pet.getId()).thenReturn(1);
+		when(pet.getName()).thenReturn("Max");
+		when(pet.getBirthDate()).thenReturn(LocalDate.now());
+		when(pet.getType()).thenReturn("dog");
+		when(pet.getVisits()).thenReturn(List.of(visit));
+
+		OwnerDetailsView owner = mock(OwnerDetailsView.class);
+		when(owner.getId()).thenReturn(TEST_OWNER_ID);
+		when(owner.getFirstName()).thenReturn("George");
+		when(owner.getLastName()).thenReturn("Franklin");
+		when(owner.getAddress()).thenReturn("110 W. Liberty St.");
+		when(owner.getCity()).thenReturn("Madison");
+		when(owner.getTelephone()).thenReturn("6085551023");
+		when(owner.getPets()).thenReturn(List.of(pet));
+		return owner;
+	}
 
 	private Owner george() {
 		Owner george = new Owner();
@@ -95,6 +125,7 @@ class OwnerControllerTests {
 			.willReturn(new PageImpl<>(List.of(george)));
 
 		given(this.owners.findById(TEST_OWNER_ID)).willReturn(Optional.of(george));
+		given(this.ownerViews.findOwnerDetailsById(TEST_OWNER_ID)).willReturn(Optional.of(georgeView()));
 		Visit visit = new Visit();
 		visit.setDate(LocalDate.now());
 		george.getPet("Max").getVisits().add(visit);

@@ -37,14 +37,8 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.concurrent.TimeUnit;
 
-
-@SpringBootTest(
-	webEnvironment = WebEnvironment.RANDOM_PORT,
-	properties = {
-		"logging.level.sql=DEBUG",
-		"spring.docker.compose.enabled=false"
-	}
-)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT,
+		properties = { "logging.level.sql=DEBUG", "spring.docker.compose.enabled=false" })
 @ActiveProfiles("mysql")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class PetClinicIntegrationTests {
@@ -68,8 +62,13 @@ public class PetClinicIntegrationTests {
 
 	@Test
 	void testOwnerDetails() {
+		long startNanos = System.nanoTime();
+
 		RestTemplate template = builder.rootUri("http://localhost:" + port).build();
 		ResponseEntity<String> result = template.exchange(RequestEntity.get("/owners/1").build(), String.class);
+
+		LOGGER.info("Request took {} ms", TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
+
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
 

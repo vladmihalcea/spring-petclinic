@@ -29,8 +29,10 @@ ext.springJavaformatCheckstyleVersion = "0.0.47"
 ext.webjarsLocatorLiteVersion = "1.1.2"
 ext.webjarsFontawesomeVersion = "4.7.0"
 ext.webjarsBootstrapVersion = "5.3.8"
+ext.blazePersistenceVersion = "1.6.18"
 
 dependencies {
+  annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen'
   implementation 'org.springframework.boot:spring-boot-starter-cache'
   implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
   implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
@@ -38,6 +40,11 @@ dependencies {
   implementation 'org.springframework.boot:spring-boot-starter-validation'
   implementation 'javax.cache:cache-api'
   implementation 'jakarta.xml.bind:jakarta.xml.bind-api'
+  implementation "com.blazebit:blaze-persistence-core-api-jakarta:${blazePersistenceVersion}"
+  implementation "com.blazebit:blaze-persistence-entity-view-api-jakarta:${blazePersistenceVersion}"
+  runtimeOnly "com.blazebit:blaze-persistence-core-impl-jakarta:${blazePersistenceVersion}"
+  runtimeOnly "com.blazebit:blaze-persistence-entity-view-impl-jakarta:${blazePersistenceVersion}"
+  runtimeOnly "com.blazebit:blaze-persistence-integration-hibernate-7.2:${blazePersistenceVersion}"
   runtimeOnly 'org.springframework.boot:spring-boot-starter-actuator'
   runtimeOnly "org.webjars:webjars-locator-lite:${webjarsLocatorLiteVersion}"
   runtimeOnly "org.webjars.npm:bootstrap:${webjarsBootstrapVersion}"
