@@ -31,6 +31,7 @@ public class BaseEntity implements Serializable {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@SequenceGenerator(allocationSize = 1000)
 	private Integer id;
 
 	public Integer getId() {
