@@ -18,8 +18,6 @@ package org.springframework.samples.petclinic.owner;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -68,15 +66,22 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
 	);
 
 	@Query("""
-        select p
-        from Pet p
-        left join p.owner o
-        where o.id in :ownerIds
+        select o
+        from Owner o
+        left join fetch o.pets
+        where o.id = :id
         """
 	)
-	List<Pet> findPetsByOwnerIds(
-		@Param("ownerIds") List<Integer> ownerIds
-	);
+	Owner findByIdWithPets(@Param("id") Integer id);
+
+	@Query("""
+        select p
+        from Pet p
+        left join fetch p.visits
+        where p.owner.id = :id
+        """
+	)
+	List<Pet> findPetsWithVisitsByOwnerId(@Param("id") Integer id);
 
 	/**
 	 * Retrieve an {@link Owner} from the data store by id.

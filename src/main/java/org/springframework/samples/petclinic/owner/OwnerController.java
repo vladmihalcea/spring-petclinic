@@ -161,9 +161,13 @@ class OwnerController {
 	@GetMapping("/owners/{ownerId}")
 	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
 		ModelAndView mav = new ModelAndView("owners/ownerDetails");
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
-		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
-				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
+		Owner owner = this.ownerService.findOwnerWithPetsAndVisits(ownerId);
+		if(owner == null) {
+			new IllegalArgumentException(String.format(
+				"Owner not found with id: %s. Please ensure the ID is correct",
+				ownerId
+			));
+		}
 		mav.addObject(owner);
 		return mav;
 	}
