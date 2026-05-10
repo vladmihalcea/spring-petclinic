@@ -1,0 +1,22 @@
+<configuration>
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>TRACE</level>
+        </filter>
+        <encoder>
+            <Pattern>%d %-5p [%t]:%X{txId} %c{1} - %m%n</Pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="org.springframework" level="warn"/>
+    <logger name="org.springframework.samples.petclinic" level="info"/>
+
+    <logger name="net.ttddyy.dsproxy.listener" level="info"/>
+
+    <logger name="org.hibernate" level="info"/>
+
+    <root>
+        <appender-ref ref="console"/>
+    </root>
+</configuration>
