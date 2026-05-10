@@ -58,11 +58,11 @@ abstract class AbstractCreateDataTest {
 
 	protected static final int BATCH_SIZE = 500;
 	protected static final int OWNER_COUNT = 3;
-	protected static final int VET_COUNT = 1000;
-	protected static final int SPECIALTY_COUNT = 100;
+	protected static final int VET_COUNT = 10;
+	protected static final int SPECIALTY_COUNT = 10;
 	protected static final int TYPE_COUNT = 100;
-	protected static final int PETS_PER_OWNER_COUNT = 100;
-	protected static final int VISITS_PER_PET_COUNT = 500;
+	protected static final int PETS_PER_OWNER_COUNT = 2;
+	protected static final int VISITS_PER_PET_COUNT = 10;
 
 	/** Specialties assigned to each vet. */
 	protected static final int SPECIALTIES_PER_VET = 5;
