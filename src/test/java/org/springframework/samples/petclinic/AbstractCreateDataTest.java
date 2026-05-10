@@ -125,6 +125,9 @@ abstract class AbstractCreateDataTest {
 		syncWithDatabase();
 		long endNanos = System.nanoTime();
 		logInsertionResults(startNanos, endNanos);
+		if(shouldExportData()) {
+			exportTables();
+		}
 	}
 
 	private void logInsertionResults(long startNanos, long endNanos) {
@@ -147,6 +150,10 @@ abstract class AbstractCreateDataTest {
 	protected abstract List<PetType> insertTypes();
 
 	protected abstract void insertOwners(List<PetType> petTypes);
+
+	protected boolean shouldExportData() {
+		return false;
+	}
 
 	protected String recordCount() {
 		StringBuilder records = new StringBuilder();
