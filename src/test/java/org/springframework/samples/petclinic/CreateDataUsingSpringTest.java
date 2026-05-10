@@ -292,6 +292,7 @@ class CreateDataUsingSpringTest extends AbstractCreateDataTest {
 			jpaProps.setProperty("hibernate.order_inserts", "true");
 			jpaProps.setProperty("hibernate.order_updates", "true");
 			jpaProps.setProperty("hibernate.jdbc.batch_versioned_data", "true");
+			jpaProps.setProperty("hibernate.id.sequence.increment_size_mismatch_strategy", "log");
 			jpaProps.setProperty(AvailableSettings.PHYSICAL_NAMING_STRATEGY, PhysicalNamingStrategySnakeCaseImpl.class.getName());
 			emf.setJpaProperties(jpaProps);
 
