@@ -51,7 +51,7 @@ public class Pet extends NamedEntity {
 
 	@OneToMany(mappedBy = "pet", cascade = CascadeType.ALL)
 	@OrderBy("date ASC")
-	private final Set<Visit> visits = new LinkedHashSet<>();
+	private Set<Visit> visits = new LinkedHashSet<>();
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Owner owner;
@@ -84,6 +84,10 @@ public class Pet extends NamedEntity {
 
 	public Collection<Visit> getVisits() {
 		return this.visits;
+	}
+
+	public void setVisits(Set<Visit> visits) {
+		this.visits = visits;
 	}
 
 	public void addVisit(Visit visit) {

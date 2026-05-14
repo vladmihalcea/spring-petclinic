@@ -45,7 +45,7 @@
 
   <table class="table table-striped">
 
-    <tr th:each="pet : ${owner.pets}">
+    <tr th:each="pet : ${petsPage.content}">
       <td valign="top">
         <dl class="dl-horizontal">
           <dt th:text="#{name}">Name</dt>
@@ -68,6 +68,13 @@
             <td th:text="${#temporals.format(visit.date, 'yyyy-MM-dd')}"></td>
             <td th:text="${visit?.description}"></td>
           </tr>
+          <tr th:if="${visitCountByPetId[pet.id] != null and visitCountByPetId[pet.id] > 5}">
+            <td colspan="2" class="text-muted">
+              <em>Showing 5 of <span th:text="${visitCountByPetId[pet.id]}"></span> visits.
+                <a th:href="@{'/owners/' + ${owner.id} + '/pets/' + ${pet.id} + '/visits'}">View all visits</a>
+              </em>
+            </td>
+          </tr>
           <tr>
             <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
             <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
@@ -77,6 +84,32 @@
     </tr>
 
   </table>
+
+  <div th:if="${totalPetPages > 1}">
+    <span th:text="#{pages}">Pages:</span>
+    <span>[</span>
+    <span th:each="i: ${#numbers.sequence(1, totalPetPages)}">
+      <a th:if="${currentPetPage != i}" th:href="@{'/owners/' + ${owner.id} + '?petPage=' + ${i}}">[[${i}]]</a>
+      <span th:unless="${currentPetPage != i}">[[${i}]]</span>
+    </span>
+    <span>]&nbsp;</span>
+    <span>
+      <a th:if="${currentPetPage > 1}" th:href="@{'/owners/' + ${owner.id} + '?petPage=1'}" th:title="#{first}" class="fa fa-fast-backward"></a>
+      <span th:unless="${currentPetPage > 1}" th:title="#{first}" class="fa fa-fast-backward"></span>
+    </span>
+    <span>
+      <a th:if="${currentPetPage > 1}" th:href="@{'/owners/' + ${owner.id} + '?petPage=' + ${currentPetPage - 1}}" th:title="#{previous}" class="fa fa-step-backward"></a>
+      <span th:unless="${currentPetPage > 1}" th:title="#{previous}" class="fa fa-step-backward"></span>
+    </span>
+    <span>
+      <a th:if="${currentPetPage < totalPetPages}" th:href="@{'/owners/' + ${owner.id} + '?petPage=' + ${currentPetPage + 1}}" th:title="#{next}" class="fa fa-step-forward"></a>
+      <span th:unless="${currentPetPage < totalPetPages}" th:title="#{next}" class="fa fa-step-forward"></span>
+    </span>
+    <span>
+      <a th:if="${currentPetPage < totalPetPages}" th:href="@{'/owners/' + ${owner.id} + '?petPage=' + ${totalPetPages}}" th:title="#{last}" class="fa fa-fast-forward"></a>
+      <span th:unless="${currentPetPage < totalPetPages}" th:title="#{last}" class="fa fa-fast-forward"></span>
+    </span>
+  </div>
   <script>
     // Function to hide the success and error messages after 3 seconds
     function hideMessages() {

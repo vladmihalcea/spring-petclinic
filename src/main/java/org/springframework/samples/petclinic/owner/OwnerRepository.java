@@ -15,11 +15,17 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.QueryHint;
+import org.hibernate.jpa.AvailableHints;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 
 /**
@@ -35,6 +41,11 @@ import org.springframework.data.repository.query.Param;
  * @author Wick Dynex
  */
 public interface OwnerRepository extends JpaRepository<Owner, Integer> {
+
+	interface PetVisitCount {
+		Integer getPetId();
+		Long getVisitCount();
+	}
 
 	/**
 	 * Retrieve {@link Owner}s from the data store by last name, returning all owners
@@ -83,6 +94,31 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
 	)
 	List<Pet> findPetsWithVisitsByOwnerId(@Param("id") Integer id);
 
+	@Query("""
+        select v
+        from Visit v
+        where v.id in (
+            select vr.id
+            from (
+              select
+                 v1.id as id,
+                 dense_rank() over (partition by v1.pet.id order by v1.date desc, v1.id desc) as ranking
+              from Visit v1
+              where v1.pet.id in :petIds
+            ) vr
+            where vr.ranking <= :maxVisitsCount
+        )
+        order by v.pet.id asc, v.date desc, v.id desc
+        """
+	)
+	@QueryHints(
+		@QueryHint(name = AvailableHints.HINT_READ_ONLY, value = "true")
+	)
+	List<Visit> findMaxVisitsByPetIds(
+		@Param("petIds") Collection<Integer> petIds,
+		@Param("maxVisitsCount") int maxVisitsCount
+	);
+
 	/**
 	 * Retrieve an {@link Owner} from the data store by id.
 	 * <p>
@@ -97,5 +133,19 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
 	 * input for id)
 	 */
 	Optional<Owner> findById(Integer id);
+
+	@Query(value = "select p from Pet p left join fetch p.type where p.owner.id = :id",
+		countQuery = "select count(p) from Pet p where p.owner.id = :id")
+	Page<Pet> findPetsByOwnerId(@Param("id") Integer id, Pageable pageable);
+
+	@Query("select p from Pet p left join fetch p.type where p.id = :id")
+	Optional<Pet> findPetById(@Param("id") Integer id);
+
+	@Query("select v.pet.id as petId, count(v) as visitCount from Visit v where v.pet.id in :petIds group by v.pet.id")
+	List<PetVisitCount> countVisitsByPetIds(@Param("petIds") Collection<Integer> petIds);
+
+	@Query(value = "select v from Visit v where v.pet.id = :petId order by v.date desc, v.id desc",
+		countQuery = "select count(v) from Visit v where v.pet.id = :petId")
+	Page<Visit> findVisitsByPetId(@Param("petId") Integer petId, Pageable pageable);
 
 }
