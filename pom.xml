@@ -172,6 +172,13 @@
       <artifactId>hypersistence-utils-hibernate-71</artifactId>
       <version>3.15.2</version>
     </dependency>
+
+    <dependency>
+      <groupId>io.hypersistence</groupId>
+      <artifactId>hypersistence-optimizer</artifactId>
+      <version>2.13.1</version>
+      <classifier>jakarta</classifier>
+    </dependency>
   </dependencies>
 
   <build>
