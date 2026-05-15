@@ -15,9 +15,9 @@
  */
 package org.springframework.samples.petclinic.model;
 
-import java.io.Serializable;
+import jakarta.persistence.MappedSuperclass;
 
-import jakarta.persistence.*;
+import java.io.Serializable;
 
 /**
  * Simple JavaBean domain object with an id property. Used as a base class for objects
@@ -27,23 +27,14 @@ import jakarta.persistence.*;
  * @author Juergen Hoeller
  */
 @MappedSuperclass
-public class BaseEntity implements Serializable {
+public abstract class BaseEntity implements Serializable {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.SEQUENCE)
-	@SequenceGenerator(allocationSize = 1000)
-	private Integer id;
+	public abstract Integer getId();
 
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
+	public abstract void setId(Integer id);
 
 	public boolean isNew() {
-		return this.id == null;
+		return this.getId() == null;
 	}
 
 }
