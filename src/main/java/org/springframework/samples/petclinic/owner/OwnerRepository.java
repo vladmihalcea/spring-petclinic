@@ -21,8 +21,6 @@ import java.util.Optional;
 
 import jakarta.persistence.QueryHint;
 import org.hibernate.jpa.AvailableHints;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
@@ -134,18 +132,8 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
 	 */
 	Optional<Owner> findById(Integer id);
 
-	@Query(value = "select p from Pet p left join fetch p.type where p.owner.id = :id",
-		countQuery = "select count(p) from Pet p where p.owner.id = :id")
-	Page<Pet> findPetsByOwnerId(@Param("id") Integer id, Pageable pageable);
-
-	@Query("select p from Pet p left join fetch p.type where p.id = :id")
-	Optional<Pet> findPetById(@Param("id") Integer id);
-
 	@Query("select v.pet.id as petId, count(v) as visitCount from Visit v where v.pet.id in :petIds group by v.pet.id")
 	List<PetVisitCount> countVisitsByPetIds(@Param("petIds") Collection<Integer> petIds);
 
-	@Query(value = "select v from Visit v where v.pet.id = :petId order by v.date desc, v.id desc",
-		countQuery = "select count(v) from Visit v where v.pet.id = :petId")
-	Page<Visit> findVisitsByPetId(@Param("petId") Integer petId, Pageable pageable);
 
 }

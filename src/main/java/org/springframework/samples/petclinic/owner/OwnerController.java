@@ -171,6 +171,7 @@ class OwnerController {
 		mav.addObject("petsPage", result.petsPage());
 		mav.addObject("currentPetPage", petPage);
 		mav.addObject("totalPetPages", result.petsPage().getTotalPages());
+		mav.addObject("visitsByPetId", result.visitsByPetId());
 		mav.addObject("visitCountByPetId", result.visitCountByPetId());
 		return mav;
 	}
