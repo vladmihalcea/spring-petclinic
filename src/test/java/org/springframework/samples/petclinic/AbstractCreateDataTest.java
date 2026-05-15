@@ -62,7 +62,7 @@ abstract class AbstractCreateDataTest {
 	protected static final int SPECIALTY_COUNT = 100;
 	protected static final int TYPE_COUNT = 100;
 	protected static final int PETS_PER_OWNER_COUNT = 100;
-	protected static final int VISITS_PER_PET_COUNT = 500;
+	protected static final int VISITS_PER_PET_COUNT = 2000;
 
 	/** Specialties assigned to each vet. */
 	protected static final int SPECIALTIES_PER_VET = 5;
@@ -152,7 +152,7 @@ abstract class AbstractCreateDataTest {
 	protected abstract void insertOwners(List<PetType> petTypes);
 
 	protected boolean shouldExportData() {
-		return false;
+		return true;
 	}
 
 	protected String recordCount() {
