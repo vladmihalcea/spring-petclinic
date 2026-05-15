@@ -15,13 +15,13 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.time.LocalDate;
-
+import io.hypersistence.utils.hibernate.id.BatchSequence;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.BaseEntity;
 
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDate;
 
 /**
  * Simple JavaBean domain object representing a visit.
@@ -32,6 +32,10 @@ import jakarta.validation.constraints.NotBlank;
 @Entity
 @Table(name = "visits")
 public class Visit extends BaseEntity {
+
+	@Id
+	@BatchSequence(name = "visits_seq", fetchSize = 150_000)
+	private Integer id;
 
 	@Column(name = "visit_date")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -48,6 +52,16 @@ public class Visit extends BaseEntity {
 	 */
 	public Visit() {
 		this.date = LocalDate.now();
+	}
+
+	@Override
+	public Integer getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	public LocalDate getDate() {

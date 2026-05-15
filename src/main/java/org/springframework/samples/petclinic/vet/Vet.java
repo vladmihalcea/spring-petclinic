@@ -15,6 +15,7 @@
  */
 package org.springframework.samples.petclinic.vet;
 
+import io.hypersistence.utils.hibernate.id.BatchSequence;
 import jakarta.persistence.*;
 import jakarta.xml.bind.annotation.XmlElement;
 import org.springframework.samples.petclinic.model.NamedEntity;
@@ -38,10 +39,24 @@ import java.util.stream.Collectors;
 @Table(name = "vets")
 public class Vet extends Person {
 
+	@Id
+	@BatchSequence(name = "vets_seq", fetchSize = 1000)
+	private Integer id;
+
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"),
 			inverseJoinColumns = @JoinColumn(name = "specialty_id"))
 	private Set<Specialty> specialties = new HashSet<>();
+
+	@Override
+	public Integer getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 	@XmlElement
 	public List<Specialty> getSpecialties() {

@@ -28,7 +28,7 @@ import jakarta.validation.constraints.NotBlank;
  * @author Wick Dynex
  */
 @MappedSuperclass
-public class NamedEntity extends BaseEntity {
+public abstract class NamedEntity extends BaseEntity {
 
 	@Column
 	@NotBlank

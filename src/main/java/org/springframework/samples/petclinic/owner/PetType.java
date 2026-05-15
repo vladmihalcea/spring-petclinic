@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import io.hypersistence.utils.hibernate.id.BatchSequence;
+import jakarta.persistence.Id;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
 import jakarta.persistence.Entity;
@@ -27,4 +29,17 @@ import jakarta.persistence.Table;
 @Table(name = "types")
 public class PetType extends NamedEntity {
 
+	@Id
+	@BatchSequence(name = "types_seq", fetchSize = 1000)
+	private Integer id;
+
+	@Override
+	public Integer getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Integer id) {
+		this.id = id;
+	}
 }
