@@ -26,6 +26,7 @@ import org.springframework.samples.petclinic.owner.*;
 import org.springframework.samples.petclinic.vet.Specialty;
 import org.springframework.samples.petclinic.vet.Vet;
 import org.springframework.samples.petclinic.vet.VetRepository;
+import org.springframework.samples.petclinic.vet.VetSpeciality;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -33,6 +34,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Integration test that populates every table through a Hibernate
@@ -69,6 +72,8 @@ class CreateDataUsingHibernateStatelessSessionTest extends AbstractCreateDataTes
 			insertData();
 		} catch (Exception e) {
 			activeSession.getTransaction().rollback();
+			fail(e.getMessage());
+
 		} finally {
 			activeSession.close();
 		}
@@ -94,19 +99,36 @@ class CreateDataUsingHibernateStatelessSessionTest extends AbstractCreateDataTes
 
 	@Override
 	protected void insertVets(List<Specialty> specialties) {
-		LOGGER.info("Inserting {} vets", formatNumber(VET_COUNT));
 		List<Vet> vets = new ArrayList<>(VET_COUNT);
 		for (int i = 0; i < VET_COUNT; i++) {
 			Vet vet = new Vet();
 			vet.setFirstName(String.format("Vet %d - first name", i));
 			vet.setLastName(String.format("Vet %d - last name", i));
 
-			for (int j = 0; j < SPECIALTIES_PER_VET; j++) {
-				vet.addSpecialty(specialties.get(RANDOM.nextInt(specialties.size())));
-			}
 			vets.add(vet);
 		}
+		LOGGER.info("Inserting {} vets", formatNumber(vets.size()));
 		activeSession.insertMultiple(vets);
+		//Now the Vet have identifiers assigned by their IDENTITY-based sequence generator
+		List<VetSpeciality> vetSpecialities = new ArrayList<>(VET_COUNT);
+		for(Vet vet : vets) {
+			for (Specialty specialty : randomSpecialities(specialties)) {
+				vetSpecialities.add(new VetSpeciality(vet, specialty));
+			}
+		}
+		LOGGER.info("Inserting {} vet_specialties", formatNumber(vetSpecialities.size()));
+		activeSession.insertMultiple(vetSpecialities);
+	}
+
+	private List<Specialty> randomSpecialities(List<Specialty> specialties) {
+		List<Specialty> randomSpecialties = new ArrayList<>();
+		while (randomSpecialties.size() < SPECIALTIES_PER_VET) {
+			Specialty specialty = specialties.get(RANDOM.nextInt(specialties.size()));
+			if (!randomSpecialties.contains(specialty)) {
+				randomSpecialties.add(specialty);
+			}
+		}
+		return randomSpecialties;
 	}
 
 	@Override
