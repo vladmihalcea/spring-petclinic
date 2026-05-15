@@ -159,13 +159,37 @@ class OwnerController {
 	 * @return a ModelMap with the model attributes for the view
 	 */
 	@GetMapping("/owners/{ownerId}")
-	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId,
+			@RequestParam(defaultValue = "1") int petPage) {
 		ModelAndView mav = new ModelAndView("owners/ownerDetails");
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
-		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
-				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
-		mav.addObject(owner);
+		OwnerService.OwnerWithPetsPage result = ownerService.findOwnerWithPaginatedPets(ownerId, petPage, 5);
+		if (result == null) {
+			throw new IllegalArgumentException(String.format(
+				"Owner not found with id: %s. Please ensure the ID is correct", ownerId));
+		}
+		mav.addObject("owner", result.owner());
+		mav.addObject("petsPage", result.petsPage());
+		mav.addObject("currentPetPage", petPage);
+		mav.addObject("totalPetPages", result.petsPage().getTotalPages());
+		mav.addObject("visitCountByPetId", result.visitCountByPetId());
 		return mav;
+	}
+
+	@GetMapping("/owners/{ownerId}/pets/{petId}/visits")
+	public String showPetVisits(@PathVariable("ownerId") int ownerId,
+			@PathVariable("petId") int petId,
+			@RequestParam(defaultValue = "1") int visitPage,
+			Model model) {
+		OwnerService.PetVisitsPage result = ownerService.findPaginatedVisitsForPet(ownerId, petId, visitPage, 10);
+		if (result == null) {
+			return "redirect:/owners/" + ownerId;
+		}
+		model.addAttribute("owner", result.owner());
+		model.addAttribute("pet", result.pet());
+		model.addAttribute("visitsPage", result.visitsPage());
+		model.addAttribute("currentVisitPage", visitPage);
+		model.addAttribute("totalVisitPages", result.visitsPage().getTotalPages());
+		return "pets/petVisits";
 	}
 
 }
