@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import io.hypersistence.utils.hibernate.id.BatchSequence;
+import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
@@ -45,6 +47,10 @@ import jakarta.persistence.Table;
 @Table(name = "pets")
 public class Pet extends NamedEntity {
 
+	@Id
+	@BatchSequence(name = "pets_seq", fetchSize = 1000)
+	private Integer id;
+
 	@Column
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate birthDate;
@@ -59,6 +65,16 @@ public class Pet extends NamedEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Owner owner;
+
+	@Override
+	public Integer getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 	public void setBirthDate(LocalDate birthDate) {
 		this.birthDate = birthDate;
