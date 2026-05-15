@@ -15,18 +15,17 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-
 import io.hypersistence.utils.hibernate.id.BatchSequence;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.model.Person;
 import org.springframework.util.Assert;
 
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.NotBlank;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Simple JavaBean domain object representing an owner.
@@ -59,7 +58,7 @@ public class Owner extends Person {
 	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
 	private String telephone;
 
-	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();
 
