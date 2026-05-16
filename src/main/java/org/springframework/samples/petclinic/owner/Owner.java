@@ -61,8 +61,7 @@ public class Owner extends Person {
 	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
 	private String telephone;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(name = "owner_id")
+	@OneToMany(mappedBy = "owner", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();
 
@@ -97,7 +96,13 @@ public class Owner extends Person {
 	public void addPet(Pet pet) {
 		if (pet.isNew()) {
 			getPets().add(pet);
+			pet.setOwner(this);
 		}
+	}
+
+	public void removePet(Pet pet) {
+		getPets().remove(pet);
+		pet.setOwner(null);
 	}
 
 	/**
