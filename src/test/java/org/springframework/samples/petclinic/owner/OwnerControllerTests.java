@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -44,6 +43,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -68,6 +68,9 @@ class OwnerControllerTests {
 	@MockitoBean
 	private OwnerRepository owners;
 
+	@MockitoBean
+	private OwnerService ownerService;
+
 	private Owner george() {
 		Owner george = new Owner();
 		george.setId(TEST_OWNER_ID);
@@ -87,12 +90,28 @@ class OwnerControllerTests {
 		return george;
 	}
 
+	private OwnerView georgeView() {
+		PetView maxView = mock(PetView.class);
+		when(maxView.getName()).thenReturn("Max");
+		when(maxView.toString()).thenReturn("Max");
+
+		OwnerView ownerView = mock(OwnerView.class);
+		when(ownerView.getId()).thenReturn(TEST_OWNER_ID);
+		when(ownerView.getFirstName()).thenReturn("George");
+		when(ownerView.getLastName()).thenReturn("Franklin");
+		when(ownerView.getAddress()).thenReturn("110 W. Liberty St.");
+		when(ownerView.getCity()).thenReturn("Madison");
+		when(ownerView.getTelephone()).thenReturn("6085551023");
+		when(ownerView.getPets()).thenReturn(List.of(maxView));
+		return ownerView;
+	}
+
 	@BeforeEach
 	void setup() {
 
 		Owner george = george();
-		given(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class)))
-			.willReturn(new PageImpl<>(List.of(george)));
+		given(this.ownerService.findPaginatedForOwnersLastName(eq("Franklin"), any()))
+			.willReturn(new PageImpl<>(List.of(georgeView())));
 
 		given(this.owners.findById(TEST_OWNER_ID)).willReturn(Optional.of(george));
 		Visit visit = new Visit();
@@ -141,15 +160,15 @@ class OwnerControllerTests {
 
 	@Test
 	void processFindFormSuccess() throws Exception {
-		Page<Owner> tasks = new PageImpl<>(List.of(george(), new Owner()));
-		when(this.owners.findByLastNameStartingWith(anyString(), any(Pageable.class))).thenReturn(tasks);
+		Page<OwnerView> tasks = new PageImpl<>(List.of(georgeView(), mock(OwnerView.class)));
+		when(this.ownerService.findPaginatedForOwnersLastName(anyString(), any())).thenReturn(tasks);
 		mockMvc.perform(get("/owners?page=1")).andExpect(status().isOk()).andExpect(view().name("owners/ownersList"));
 	}
 
 	@Test
 	void processFindFormByLastName() throws Exception {
-		Page<Owner> tasks = new PageImpl<>(List.of(george()));
-		when(this.owners.findByLastNameStartingWith(eq("Franklin"), any(Pageable.class))).thenReturn(tasks);
+		Page<OwnerView> tasks = new PageImpl<>(List.of(georgeView()));
+		when(this.ownerService.findPaginatedForOwnersLastName(eq("Franklin"), any())).thenReturn(tasks);
 		mockMvc.perform(get("/owners?page=1").param("lastName", "Franklin"))
 			.andExpect(status().is3xxRedirection())
 			.andExpect(view().name("redirect:/owners/" + TEST_OWNER_ID));
@@ -157,8 +176,8 @@ class OwnerControllerTests {
 
 	@Test
 	void processFindFormNoOwnersFound() throws Exception {
-		Page<Owner> tasks = new PageImpl<>(List.of());
-		when(this.owners.findByLastNameStartingWith(eq("Unknown Surname"), any(Pageable.class))).thenReturn(tasks);
+		Page<OwnerView> tasks = new PageImpl<>(List.of());
+		when(this.ownerService.findPaginatedForOwnersLastName(eq("Unknown Surname"), any())).thenReturn(tasks);
 		mockMvc.perform(get("/owners?page=1").param("lastName", "Unknown Surname"))
 			.andExpect(status().isOk())
 			.andExpect(model().attributeHasFieldErrors("owner", "lastName"))
