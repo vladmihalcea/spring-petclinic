@@ -65,8 +65,8 @@ class CreateDataUsingDataJpaTest extends AbstractCreateDataTest {
 	}
 
 	@Override
-	protected boolean requiresFlushPriorToCountingRecords() {
-		return true;
+	protected void syncWithDatabase() {
+		entityManager.flush();
 	}
 
 	// -------------------------------------------------------------------------
