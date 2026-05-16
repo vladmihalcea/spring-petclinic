@@ -122,10 +122,12 @@ abstract class AbstractCreateDataTest {
 		QueryCountHolder.clear();
 		insertVets(insertSpecialties());
 		insertOwners(insertTypes());
-		if (requiresFlushPriorToCountingRecords()) {
-			entityManager.flush();
-		}
+		syncWithDatabase();
 		long endNanos = System.nanoTime();
+		logInsertionResults(startNanos, endNanos);
+	}
+
+	private void logInsertionResults(long startNanos, long endNanos) {
 		QueryCount queryCount = QueryCountHolder.getGrandTotal();
 		long insertCount = queryCount.getInsert();
 		LOGGER.info("Inserting {} records took {} ms and generated {} INSERT statements",
@@ -133,6 +135,9 @@ abstract class AbstractCreateDataTest {
 			formatNumber(TimeUnit.NANOSECONDS.toMillis(endNanos - startNanos)),
 			formatNumber(insertCount)
 		);
+	}
+
+	protected void syncWithDatabase() {
 	}
 
 	protected abstract List<Specialty> insertSpecialties();
@@ -170,11 +175,6 @@ abstract class AbstractCreateDataTest {
 	protected String formatNumber(Number number) {
 		return new DecimalFormat("#,###").format(number);
 	}
-
-	protected boolean requiresFlushPriorToCountingRecords() {
-		return false;
-	}
-
 
 	// -------------------------------------------------------------------------
 	// Infrastructure helpers
