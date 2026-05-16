@@ -15,7 +15,6 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,9 +49,11 @@ class OwnerController {
 
 	private static final String VIEWS_OWNER_CREATE_OR_UPDATE_FORM = "owners/createOrUpdateOwnerForm";
 
+	private final OwnerService ownerService;
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	public OwnerController(OwnerService ownerService, OwnerRepository owners) {
+		this.ownerService = ownerService;
 		this.owners = owners;
 	}
 
@@ -101,7 +102,9 @@ class OwnerController {
 		}
 
 		// find owners by last name
-		Page<Owner> ownersResults = findPaginatedForOwnersLastName(page, lastName);
+		int pageSize = 5;
+		Pageable pageable = PageRequest.of(page - 1, pageSize);
+		Page<OwnerView> ownersResults = ownerService.findPaginatedForOwnersLastName(lastName, pageable);
 		if (ownersResults.isEmpty()) {
 			// no owners found
 			result.rejectValue("lastName", "notFound", "not found");
@@ -110,27 +113,19 @@ class OwnerController {
 
 		if (ownersResults.getTotalElements() == 1) {
 			// 1 owner found
-			owner = ownersResults.iterator().next();
-			return "redirect:/owners/" + owner.getId();
+			return "redirect:/owners/" + ownersResults.iterator().next().getId();
 		}
 
 		// multiple owners found
 		return addPaginationModel(page, model, ownersResults);
 	}
 
-	private String addPaginationModel(int page, Model model, Page<Owner> paginated) {
-		List<Owner> listOwners = paginated.getContent();
+	private String addPaginationModel(int page, Model model, Page<OwnerView> paginated) {
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
-		model.addAttribute("listOwners", listOwners);
+		model.addAttribute("listOwners", paginated.getContent());
 		return "owners/ownersList";
-	}
-
-	private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname) {
-		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page - 1, pageSize);
-		return owners.findByLastNameStartingWith(lastname, pageable);
 	}
 
 	@GetMapping("/owners/{ownerId}/edit")

@@ -183,6 +183,11 @@ abstract class AbstractCreateDataTest {
 		return new DecimalFormat("#,###").format(number);
 	}
 
+	protected boolean requiresFlushPriorToCountingRecords() {
+		return false;
+	}
+
+
 	// -------------------------------------------------------------------------
 	// Infrastructure helpers
 	// -------------------------------------------------------------------------

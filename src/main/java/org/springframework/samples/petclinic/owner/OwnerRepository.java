@@ -15,11 +15,14 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repository class for <code>Owner</code> domain objects. All method names are compliant
@@ -42,7 +45,38 @@ public interface OwnerRepository extends JpaRepository<Owner, Integer> {
 	 * @return a Collection of matching {@link Owner}s (or an empty Collection if none
 	 * found)
 	 */
-	Page<Owner> findByLastNameStartingWith(String lastName, Pageable pageable);
+	@Query("""
+        select o
+        from Owner o
+        left join fetch o.pets p
+        where o.id in (
+            select or.id
+            from (
+              select
+                 o1.id as id,
+                 dense_rank() over (order by o1.id) as ranking
+              from Owner o1
+              where o1.lastName like :lastName
+            ) or
+            where or.ranking <= :maxCount
+        )
+        """
+	)
+	List<Owner> findByLastNameStartingWith(
+		@Param("lastName") String lastName,
+		@Param("maxCount") int maxCount
+	);
+
+	@Query("""
+        select p
+        from Pet p
+        left join p.owner o
+        where o.id in :ownerIds
+        """
+	)
+	List<Pet> findPetsByOwnerIds(
+		@Param("ownerIds") List<Integer> ownerIds
+	);
 
 	/**
 	 * Retrieve an {@link Owner} from the data store by id.
