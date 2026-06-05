@@ -220,6 +220,15 @@
       <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
       <version>${blaze-persistence.version}</version>
     </dependency>
+
+    <!-- Boot UI from Julien Dubois
+         Load the app at http://localhost:8080/bootui
+    -->
+    <dependency>
+      <groupId>com.julien-dubois.bootui</groupId>
+      <artifactId>bootui-spring-boot-starter</artifactId>
+      <version>1.0.0</version>
+    </dependency>
   </dependencies>
 
   <build>
