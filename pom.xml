@@ -38,6 +38,7 @@
 
     <datasource-proxy-spring-boot-starter.version>2.0.0</datasource-proxy-spring-boot-starter.version>
     <blaze-persistence.version>1.6.18</blaze-persistence.version>
+    <boot-ui.version>1.2.0</boot-ui.version>
   </properties>
 
   <dependencies>
@@ -219,6 +220,15 @@
       <groupId>com.blazebit</groupId>
       <artifactId>blaze-persistence-integration-spring-data-4.0</artifactId>
       <version>${blaze-persistence.version}</version>
+    </dependency>
+
+    <!-- Boot UI from Julien Dubois
+         Load the app at http://localhost:8080/bootui
+    -->
+    <dependency>
+      <groupId>com.julien-dubois.bootui</groupId>
+      <artifactId>bootui-spring-boot-starter</artifactId>
+      <version>${boot-ui.version}</version>
     </dependency>
   </dependencies>
 
