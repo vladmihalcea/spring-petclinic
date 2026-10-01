@@ -3,4 +3,5 @@
 *.java          text eol=lf
 
 /gradlew        text eol=lf
+/run.sh         text eol=lf
 *.bat           text eol=crlf
