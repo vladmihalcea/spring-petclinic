@@ -17,11 +17,11 @@ package org.springframework.samples.petclinic.owner;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -52,8 +52,11 @@ class OwnerController {
 
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	private final OwnerService ownerService;
+
+	public OwnerController(OwnerRepository owners, OwnerService ownerService) {
 		this.owners = owners;
+		this.ownerService = ownerService;
 	}
 
 	@InitBinder
@@ -119,7 +122,10 @@ class OwnerController {
 	}
 
 	private String addPaginationModel(int page, Model model, Page<Owner> paginated) {
-		List<Owner> listOwners = paginated.getContent();
+		// The list shows each owner's pets, so they are fetched for the whole page in a
+		// single query instead of being loaded lazily, one owner at a time.
+		List<Owner> listOwners = owners
+			.findAllWithPetsByIdIn(paginated.getContent().stream().map(Owner::getId).toList());
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
@@ -129,7 +135,7 @@ class OwnerController {
 
 	private Page<Owner> findPaginatedForOwnersLastName(int page, String lastname) {
 		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page - 1, pageSize);
+		Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("id"));
 		return owners.findByLastNameStartingWith(lastname, pageable);
 	}
 
@@ -164,13 +170,41 @@ class OwnerController {
 	 * @return a ModelMap with the model attributes for the view
 	 */
 	@GetMapping("/owners/{ownerId}")
-	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId, @RequestParam(defaultValue = "1") int petPage) {
 		ModelAndView mav = new ModelAndView("owners/ownerDetails");
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
-		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
-				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
-		mav.addObject(owner);
+		OwnerService.OwnerWithPetsPage result = ownerService.findOwnerWithPaginatedPets(ownerId, petPage, 5);
+		if (result == null) {
+			throw new IllegalArgumentException(
+					"Owner not found with id: " + ownerId + ". Please ensure the ID is correct ");
+		}
+		mav.addObject("owner", result.owner());
+		mav.addObject("petsPage", result.petsPage());
+		mav.addObject("currentPetPage", petPage);
+		mav.addObject("totalPetPages", result.petsPage().getTotalPages());
+		mav.addObject("visitCountByPetId", result.visitCountByPetId());
 		return mav;
+	}
+
+	/**
+	 * Custom handler for displaying the paginated visits of a single pet, so a pet with
+	 * many visits never has to load them all at once.
+	 * @param ownerId the ID of the owner the pet belongs to
+	 * @param petId the ID of the pet whose visits are displayed
+	 * @return the pet-visits view
+	 */
+	@GetMapping("/owners/{ownerId}/pets/{petId}/visits")
+	public String showPetVisits(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
+			@RequestParam(defaultValue = "1") int visitPage, Model model) {
+		OwnerService.PetVisitsPage result = ownerService.findPaginatedVisitsForPet(ownerId, petId, visitPage, 10);
+		if (result == null) {
+			return "redirect:/owners/" + ownerId;
+		}
+		model.addAttribute("owner", result.owner());
+		model.addAttribute("pet", result.pet());
+		model.addAttribute("visitsPage", result.visitsPage());
+		model.addAttribute("currentVisitPage", visitPage);
+		model.addAttribute("totalVisitPages", result.visitsPage().getTotalPages());
+		return "pets/petVisits";
 	}
 
 }

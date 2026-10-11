@@ -20,6 +20,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -52,7 +53,11 @@ class VetController {
 	}
 
 	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
-		List<Vet> listVets = paginated.getContent();
+		// The list shows each vet's specialties, so they are fetched for the whole page
+		// in
+		// a single query instead of being loaded lazily, one vet at a time.
+		List<Vet> listVets = vetRepository
+			.findAllWithSpecialtiesByIdIn(paginated.getContent().stream().map(Vet::getId).toList());
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
@@ -62,16 +67,20 @@ class VetController {
 
 	private Page<Vet> findPaginated(int page) {
 		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page - 1, pageSize);
+		Pageable pageable = PageRequest.of(page - 1, pageSize, Sort.by("id"));
 		return vetRepository.findAll(pageable);
 	}
 
 	@GetMapping({ "/vets" })
-	public @ResponseBody Vets showResourcesVetList() {
+	public @ResponseBody Vets showResourcesVetList(@RequestParam(defaultValue = "1") int page) {
 		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for JSon/Object mapping
+		// objects so it is simpler for JSon/Object mapping. The vets are paginated, like
+		// the HTML list, instead of returning every vet in a single response.
 		Vets vets = new Vets();
-		vets.getVetList().addAll(this.vetRepository.findAll());
+		Page<Vet> paginated = findPaginated(page);
+		vets.getVetList()
+			.addAll(vetRepository
+				.findAllWithSpecialtiesByIdIn(paginated.getContent().stream().map(Vet::getId).toList()));
 		return vets;
 	}
 

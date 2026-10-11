@@ -64,6 +64,9 @@ class PetControllerTests {
 	@MockitoBean
 	private PetTypeRepository types;
 
+	@MockitoBean
+	private OwnerService ownerService;
+
 	@BeforeEach
 	void setup() {
 		PetType cat = new PetType();
@@ -80,7 +83,7 @@ class PetControllerTests {
 		dog.setId(TEST_PET_ID + 1);
 		pet.setName("petty");
 		dog.setName("doggy");
-		given(this.owners.findById(TEST_OWNER_ID)).willReturn(Optional.of(owner));
+		given(this.owners.findByIdWithPets(TEST_OWNER_ID)).willReturn(Optional.of(owner));
 	}
 
 	@Test

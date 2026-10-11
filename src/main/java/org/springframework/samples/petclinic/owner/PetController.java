@@ -53,9 +53,12 @@ class PetController {
 
 	private final PetTypeRepository types;
 
-	public PetController(OwnerRepository owners, PetTypeRepository types) {
+	private final OwnerService ownerService;
+
+	public PetController(OwnerRepository owners, PetTypeRepository types, OwnerService ownerService) {
 		this.owners = owners;
 		this.types = types;
+		this.ownerService = ownerService;
 	}
 
 	@ModelAttribute("types")
@@ -65,7 +68,7 @@ class PetController {
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable("ownerId") int ownerId) {
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+		Optional<Owner> optionalOwner = this.owners.findByIdWithPets(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 		return owner;
@@ -79,7 +82,7 @@ class PetController {
 			return new Pet();
 		}
 
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+		Optional<Owner> optionalOwner = this.owners.findByIdWithPets(ownerId);
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 		return owner.getPet(petId);
@@ -120,8 +123,7 @@ class PetController {
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 
-		owner.addPet(pet);
-		this.owners.save(owner);
+		this.ownerService.addPet(owner.getId(), pet);
 		redirectAttributes.addFlashAttribute("message", "New Pet has been Added");
 		return "redirect:/owners/{ownerId}";
 	}
@@ -169,15 +171,13 @@ class PetController {
 		Assert.state(id != null, "'pet.getId()' must not be null");
 		Pet existingPet = owner.getPet(id);
 		if (existingPet != null) {
-			// Update existing pet's properties
-			existingPet.setName(pet.getName());
-			existingPet.setBirthDate(pet.getBirthDate());
-			existingPet.setType(pet.getType());
+			// Update the managed pet only, instead of merging the whole owner aggregate
+			this.ownerService.updatePet(id, pet);
 		}
 		else {
 			owner.addPet(pet);
+			this.owners.save(owner);
 		}
-		this.owners.save(owner);
 	}
 
 }

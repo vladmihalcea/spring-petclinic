@@ -18,6 +18,8 @@ package org.springframework.samples.petclinic.system;
 
 import java.io.InputStream;
 import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.List;
 
 import javax.sql.DataSource;
@@ -74,13 +76,16 @@ class LargeDataSetLoader {
 			Long visitCount = jdbcTemplate.queryForObject("select count(*) from visits", Long.class);
 			if (visitCount != null && visitCount > 0) {
 				LOGGER.info("The database already holds {} visits, skipping the data load", visitCount);
+				// The rows may have been loaded by a previous mapping that used other
+				// identifier sequences, so make sure the current ones are past them.
+				inTransaction(dataSource, this::advanceSequences);
 				return;
 			}
 
 			LOGGER.info("Loading the large data set using the PostgreSQL COPY command");
 			long startNanos = System.nanoTime();
 
-			try (Connection connection = dataSource.getConnection()) {
+			inTransaction(dataSource, connection -> {
 				CopyManager copyManager = connection.unwrap(PGConnection.class).getCopyAPI();
 				for (TableImport tableImport : IMPORTS) {
 					try (InputStream csv = new ClassPathResource("db/data/" + tableImport.table() + ".csv")
@@ -90,9 +95,8 @@ class LargeDataSetLoader {
 						LOGGER.info("Loaded {} rows into {}", rows, tableImport.table());
 					}
 				}
-			}
-
-			resetIdentitySequences(jdbcTemplate);
+				advanceSequences(connection);
+			});
 
 			long millis = (System.nanoTime() - startNanos) / 1_000_000;
 			LOGGER.info("The large data set was loaded in {} ms", millis);
@@ -100,15 +104,54 @@ class LargeDataSetLoader {
 	}
 
 	/**
-	 * The CSV rows carry explicit identifiers, so the {@code IDENTITY} sequences must be
-	 * advanced past the largest value, otherwise the first row the application inserts
-	 * would collide with an existing identifier.
+	 * The connection pool hands out connections with auto-commit disabled, so the work
+	 * runs in a single transaction that is committed explicitly.
 	 */
-	private void resetIdentitySequences(JdbcTemplate jdbcTemplate) {
-		for (String table : List.of("vets", "specialties", "types", "owners", "pets", "visits")) {
-			jdbcTemplate.execute("select setval(pg_get_serial_sequence('" + table + "', 'id'), "
-					+ "(select coalesce(max(id), 1) from " + table + "))");
+	private void inTransaction(DataSource dataSource, ConnectionWork work) throws Exception {
+		try (Connection connection = dataSource.getConnection()) {
+			boolean autoCommit = connection.getAutoCommit();
+			connection.setAutoCommit(false);
+			try {
+				work.execute(connection);
+				connection.commit();
+			}
+			catch (Exception e) {
+				connection.rollback();
+				throw e;
+			}
+			finally {
+				connection.setAutoCommit(autoCommit);
+			}
 		}
+	}
+
+	/**
+	 * The CSV rows carry explicit identifiers, so the identifier sequences must be
+	 * advanced past the largest value, otherwise the first row the application inserts
+	 * would collide with an existing identifier. Both the column's own {@code IDENTITY}
+	 * sequence and the explicit sequence used by the {@code @BatchSequence} generators
+	 * (e.g., {@code owners_seq}) are advanced, and a sequence never moves backwards. A
+	 * missing sequence resolves to {@code NULL}, which {@code setval} simply ignores, so
+	 * the same statements work whichever generator the mapping relies on.
+	 */
+	private void advanceSequences(Connection connection) throws SQLException {
+		try (Statement statement = connection.createStatement()) {
+			for (String table : List.of("vets", "specialties", "types", "owners", "pets", "visits")) {
+				String maxId = "(select coalesce(max(id), 1) from " + table + ")";
+				for (String sequence : List.of("pg_get_serial_sequence('" + table + "', 'id')::regclass",
+						"to_regclass('" + table + "_seq')")) {
+					statement.execute("select setval(s, greatest(" + maxId
+							+ ", coalesce(pg_sequence_last_value(s), 1))) from (select " + sequence + " as s) as seq");
+				}
+			}
+		}
+	}
+
+	@FunctionalInterface
+	private interface ConnectionWork {
+
+		void execute(Connection connection) throws Exception;
+
 	}
 
 	private record TableImport(String table, String columns) {

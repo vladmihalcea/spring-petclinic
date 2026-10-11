@@ -55,6 +55,9 @@ class VisitControllerTests {
 	@MockitoBean
 	private OwnerRepository owners;
 
+	@MockitoBean
+	private OwnerService ownerService;
+
 	@BeforeEach
 	void init() {
 		Owner owner = new Owner();
@@ -62,6 +65,7 @@ class VisitControllerTests {
 		owner.addPet(pet);
 		pet.setId(TEST_PET_ID);
 		given(this.owners.findById(TEST_OWNER_ID)).willReturn(Optional.of(owner));
+		given(this.ownerService.findOwnerWithPetVisits(TEST_OWNER_ID, TEST_PET_ID)).willReturn(owner);
 	}
 
 	@Test

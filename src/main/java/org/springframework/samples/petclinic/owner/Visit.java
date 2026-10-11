@@ -15,15 +15,13 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.time.LocalDate;
-
+import io.hypersistence.utils.hibernate.id.BatchSequence;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.BaseEntity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
+import java.time.LocalDate;
 
 /**
  * Simple JavaBean domain object representing a visit.
@@ -35,6 +33,10 @@ import jakarta.validation.constraints.NotBlank;
 @Table(name = "visits")
 public class Visit extends BaseEntity {
 
+	@Id
+	@BatchSequence(name = "visits_seq", fetchSize = 150_000)
+	private Integer id;
+
 	@Column(name = "visit_date")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate date;
@@ -42,11 +44,24 @@ public class Visit extends BaseEntity {
 	@NotBlank
 	private String description;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Pet pet;
+
 	/**
 	 * Creates a new instance of Visit for the current date
 	 */
 	public Visit() {
 		this.date = LocalDate.now();
+	}
+
+	@Override
+	public Integer getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 	public LocalDate getDate() {
@@ -63,6 +78,14 @@ public class Visit extends BaseEntity {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	public Pet getPet() {
+		return pet;
+	}
+
+	public void setPet(Pet pet) {
+		this.pet = pet;
 	}
 
 }

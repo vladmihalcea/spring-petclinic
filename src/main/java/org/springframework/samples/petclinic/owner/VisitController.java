@@ -41,10 +41,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 class VisitController {
 
-	private final OwnerRepository owners;
+	private final OwnerService ownerService;
 
-	public VisitController(OwnerRepository owners) {
-		this.owners = owners;
+	public VisitController(OwnerService ownerService) {
+		this.ownerService = ownerService;
 	}
 
 	@InitBinder
@@ -62,9 +62,9 @@ class VisitController {
 	@ModelAttribute("visit")
 	public Visit loadPetWithVisit(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
 			Map<String, Object> model) {
-		Optional<Owner> optionalOwner = owners.findById(ownerId);
-		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
-				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
+		Owner owner = Optional.ofNullable(ownerService.findOwnerWithPetVisits(ownerId, petId))
+			.orElseThrow(() -> new IllegalArgumentException(
+					"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 
 		Pet pet = owner.getPet(petId);
 		if (pet == null) {
@@ -95,8 +95,7 @@ class VisitController {
 			return "pets/createOrUpdateVisitForm";
 		}
 
-		owner.addVisit(petId, visit);
-		this.owners.save(owner);
+		this.ownerService.addVisit(petId, visit);
 		redirectAttributes.addFlashAttribute("message", "Your visit has been booked");
 		return "redirect:/owners/{ownerId}";
 	}

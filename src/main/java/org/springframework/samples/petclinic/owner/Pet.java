@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import io.hypersistence.utils.hibernate.id.BatchSequence;
+import jakarta.persistence.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
@@ -45,18 +47,34 @@ import jakarta.persistence.Table;
 @Table(name = "pets")
 public class Pet extends NamedEntity {
 
+	@Id
+	@BatchSequence(name = "pets_seq", fetchSize = 1000)
+	private Integer id;
+
 	@Column
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private LocalDate birthDate;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "type_id")
 	private PetType type;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@JoinColumn(name = "pet_id")
+	@OneToMany(mappedBy = "pet", cascade = CascadeType.ALL)
 	@OrderBy("date ASC")
-	private final Set<Visit> visits = new LinkedHashSet<>();
+	private Set<Visit> visits = new LinkedHashSet<>();
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	private Owner owner;
+
+	@Override
+	public Integer getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
 	public void setBirthDate(LocalDate birthDate) {
 		this.birthDate = birthDate;
@@ -78,8 +96,26 @@ public class Pet extends NamedEntity {
 		return this.visits;
 	}
 
+	public void setVisits(Set<Visit> visits) {
+		this.visits = visits;
+	}
+
 	public void addVisit(Visit visit) {
 		getVisits().add(visit);
+		visit.setPet(this);
+	}
+
+	public void removeVisit(Visit visit) {
+		getVisits().remove(visit);
+		visit.setPet(null);
+	}
+
+	public Owner getOwner() {
+		return this.owner;
+	}
+
+	public void setOwner(Owner owner) {
+		this.owner = owner;
 	}
 
 }

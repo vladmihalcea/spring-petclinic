@@ -23,6 +23,7 @@ import io.hypersistence.optimizer.core.config.Config;
 import io.hypersistence.optimizer.core.config.JpaConfig;
 import jakarta.persistence.EntityManagerFactory;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -40,10 +41,21 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HypersistenceConfiguration {
 
+	/**
+	 * The {@link EntityManagerFactory} is resolved lazily through an
+	 * {@link ObjectProvider}, so that web-layer test slices, which load this
+	 * configuration without a JPA context, simply skip the Optimizer instead of failing
+	 * to start.
+	 */
 	@Bean
-	public HypersistenceOptimizer hypersistenceOptimizer(EntityManagerFactory entityManagerFactory) {
+	public HypersistenceOptimizer hypersistenceOptimizer(ObjectProvider<EntityManagerFactory> entityManagerFactory) {
 
-		return new HypersistenceOptimizer(new JpaConfig(entityManagerFactory)
+		EntityManagerFactory emf = entityManagerFactory.getIfAvailable();
+		if (emf == null) {
+			return null;
+		}
+
+		return new HypersistenceOptimizer(new JpaConfig(emf)
 			.setEventPersistence(new Config.EventPersistence().setApplicationName("spring-petclinic")
 				.setRuntimeRollupWindowMillis(TimeUnit.SECONDS.toMillis(5))
 				.setWebAppEnabled(true)

@@ -15,12 +15,11 @@
  */
 package org.springframework.samples.petclinic.model;
 
-import java.io.Serializable;
-
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import org.hibernate.proxy.HibernateProxy;
+
+import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Simple JavaBean domain object with an id property. Used as a base class for objects
@@ -30,22 +29,42 @@ import jakarta.persistence.MappedSuperclass;
  * @author Juergen Hoeller
  */
 @MappedSuperclass
-public class BaseEntity implements Serializable {
+public abstract class BaseEntity implements Serializable {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id;
+	public abstract Integer getId();
 
-	public Integer getId() {
-		return id;
-	}
-
-	public void setId(Integer id) {
-		this.id = id;
-	}
+	public abstract void setId(Integer id);
 
 	public boolean isNew() {
-		return this.id == null;
+		return this.getId() == null;
+	}
+
+	/**
+	 * Two entities are equal when they are of the same class and share the same,
+	 * already-assigned identifier, so an entity can be found in a {@code HashSet} both
+	 * before and after it is persisted or merged. The class is resolved without
+	 * initializing a Hibernate proxy.
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) {
+			return true;
+		}
+		if (o == null || effectiveClass(this) != effectiveClass(o)) {
+			return false;
+		}
+		BaseEntity other = (BaseEntity) o;
+		return getId() != null && Objects.equals(getId(), other.getId());
+	}
+
+	@Override
+	public int hashCode() {
+		return effectiveClass(this).hashCode();
+	}
+
+	private static Class<?> effectiveClass(Object entity) {
+		return entity instanceof HibernateProxy proxy ? proxy.getHibernateLazyInitializer().getPersistentClass()
+				: entity.getClass();
 	}
 
 }

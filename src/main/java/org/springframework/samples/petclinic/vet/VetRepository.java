@@ -19,10 +19,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Repository class for <code>Vet</code> domain objects All method names are compliant
@@ -43,7 +46,18 @@ public interface VetRepository extends Repository<Vet, Integer> {
 	 */
 	@Transactional(readOnly = true)
 	@Cacheable("vets")
+	@Query("select v from Vet v left join fetch v.specialties order by v.id")
 	Collection<Vet> findAll() throws DataAccessException;
+
+	/**
+	 * Retrieve the given <code>Vet</code>s together with their specialties, so a page of
+	 * vets can list them without a query per vet.
+	 * @param ids the identifiers of the vets to load
+	 * @return the matching vets, ordered by identifier
+	 */
+	@Transactional(readOnly = true)
+	@Query("select v from Vet v left join fetch v.specialties where v.id in :ids order by v.id")
+	List<Vet> findAllWithSpecialtiesByIdIn(@Param("ids") Collection<Integer> ids);
 
 	/**
 	 * Retrieve all <code>Vet</code>s from data store in Pages
